@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員系統和聊天室</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+</head>
+
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">會員系統和聊天室</h1>
+
+    <!-- 使用者資訊 Modal -->
+    <!-- 使用者資訊 Modal -->
+    <div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="userInfoModalLabel">會員資訊</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img id="modalUserPhoto" class="rounded-circle mb-3" alt="User Photo" style="width: 100px; height: 100px;">
+            <p>信箱：<span id="modalUserEmail"></span></p>
+            <p>姓名：<span id="modalUserName"></span></p>
+            <p>最後登入日期：<span id="modalLastLogin"></span></p>
+          </div>
+          <div class="modal-footer">
+            <!-- 登出按鈕 -->
+            <button type="button" class="btn btn-danger" id="logoutButtonInModal">登出</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 頭像按鈕 -->
+    <img id="userPhotoButton" class="rounded-circle" alt="User Photo"
+      style="width: 50px; height: 50px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#userInfoModal">
+
+
+
+    <!-- Nav Tabs -->
+    <div class="d-flex justify-content-between align-items-center">
+      <ul class="nav nav-tabs" id="authTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register"
+            type="button" role="tab">註冊</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button"
+            role="tab">登入</button>
+        </li>
+      </ul>
+      <span id="currentDateTime" class="ms-auto"></span>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content mt-4" id="authTabsContent">
+      <!-- 註冊 Tab -->
+      <div class="tab-pane fade show active" id="register" role="tabpanel">
+        <button class="btn btn-primary" id="registerButton">使用 Google 註冊</button>
+      </div>
+
+      <!-- 登入 Tab -->
+      <div class="tab-pane fade" id="login" role="tabpanel">
+        <button class="btn btn-primary" id="loginButton">使用 Google 登入</button>
+      </div>
+    </div>
+
+    <!-- 使用者資訊區域，初始為隱藏 -->
+    <div id="userInfo" class="text-center mt-5" style="display:none;">
+      <img id="userPhoto" alt="User Photo" class="rounded-circle" style="width:100px;height:100px;">
+      <p>信箱：<span id="userEmail"></span></p>
+      <p>姓名：<span id="userName"></span></p>
+      <p>最後登入日期：<span id="lastLogin"></span></p>
+      <button class="btn btn-danger" id="logoutButton">登出</button>
+    </div>
+
+    <!-- 聊天室區域 -->
+    <div class="row mt-5">
+      <div class="col-md-6 text-center">
+        <h2>僅限會員觀看影片</h2>
+        <div style="pointer-events: none;" id="videoContainer">
+          <iframe id="restrictedVideo" width="560" height="315" src="https://www.youtube.com/embed/xdfVomq3lAc"
+            title="YouTube video player" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- 聊天室 -->
+      <div class="col-md-6">
+        <h2>聊天室</h2>
+        <div id="chatMessages" class="border border-secondary rounded p-3 mb-3"
+          style="height: 300px; overflow-y: scroll;">
+          <!-- 訊息顯示區域 -->
+        </div>
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="messageInput" placeholder="輸入訊息...">
+          <button class="btn btn-primary" id="sendButton">發送</button>
+        </div>
+
+        <!-- 關鍵字按鈕，放置於輸入框下方並靠右對齊 -->
+        <div class="d-flex justify-content-end mt-2">
+          <button class="btn btn-primary me-2" id="setKeywordButton">設定關鍵字</button>
+          <button class="btn btn-info" id="viewKeywordsButton">關鍵字資訊</button>
+        </div>
+
+        <!-- 關鍵字資訊 Modal -->
+        <div class="modal fade" id="keywordsModal" tabindex="-1" aria-labelledby="keywordsModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="keywordsModalLabel">我設定的關鍵字</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <ul id="keywordsList" class="list-group">
+                  <!-- 顯示關鍵字列表 -->
+                </ul>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+        <!-- Firebase SDK and JavaScript code -->
+        <script type="module">
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+          import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+          import { getDatabase, ref, set, get, update, push, onChildAdded, onValue, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+          // Firebase configuration
+          const firebaseConfig = {
+            apiKey: "AIzaSyCmD0mEppKbFaX2vqbPpPUvQ_9ISPQMEJs",
+            authDomain: "web1113-41241211.firebaseapp.com",
+            databaseURL: "https://web1113-41241211-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "web1113-41241211",
+            storageBucket: "web1113-41241211.firebasestorage.app",
+            messagingSenderId: "313858937681",
+            appId: "1:313858937681:web:1c9400dabddde11442f970"
+          };
+
+
+          // Initialize Firebase
+          const app = initializeApp(firebaseConfig);
+          const auth = getAuth(app);
+          const database = getDatabase(app);
+          const provider = new GoogleAuthProvider();
+          const messagesRef = ref(database, 'chatMessages');
+
+          // 註冊按鈕
+          document.getElementById('registerButton').addEventListener('click', async () => {
+            try {
+              const result = await signInWithPopup(auth, provider);
+              const user = result.user;
+              const userRef = ref(database, 'users/' + user.email.replace('.', '_'));
+
+              const snapshot = await get(userRef);
+              if (snapshot.exists()) {
+                await signOut(auth);
+                Swal.fire('帳號已存在', '該帳號已註冊，請前往登入。', 'info');
+              } else {
+                const currentDate = new Date().toLocaleString();
+                await set(userRef, {
+                  email: user.email,
+                  displayName: user.displayName || '無姓名',
+                  photoURL: user.photoURL || 'https://via.placeholder.com/100',
+                  lastLogin: currentDate
+                });
+                Swal.fire('註冊成功', '帳號已成功註冊', 'success');
+                displayUserInfo(user, currentDate);
+                enableVideo();
+              }
+            } catch (error) {
+              console.error('註冊失敗', error);
+            }
+          });
+
+          document.getElementById('loginButton').addEventListener('click', async () => {
+            try {
+              provider.setCustomParameters({
+                prompt: 'select_account', // 強制彈出帳號選擇器
+              });
+
+              const result = await signInWithPopup(auth, provider);
+              const user = result.user;
+              const userRef = ref(database, 'users/' + user.email.replace('.', '_'));
+
+              const snapshot = await get(userRef);
+
+              if (snapshot.exists()) {
+                const userData = snapshot.val();
+                const lastLoginFromDB = userData.lastLogin || '無上次登入記錄'; // 從資料庫獲取上次登入時間
+
+                // 顯示上次登入日期
+                displayUserInfo(user, lastLoginFromDB);
+
+                // 更新最後登入日期
+                const currentDate = new Date().toLocaleString();
+                await update(userRef, { lastLogin: currentDate });
+
+                Swal.fire('登入成功', `歡迎回來！\n上次登入時間：${lastLoginFromDB}`, 'success');
+                enableVideo();
+
+                // 手動刷新訊息列表
+                renderChatMessages();
+              } else {
+                await signOut(auth);
+                Swal.fire('帳號未註冊', '請先註冊後再登入。', 'error');
+              }
+            } catch (error) {
+              console.error('登入失敗', error);
+            }
+          });
+
+
+
+          function displayUserInfo(user, lastLoginDate) {
+            // 填充頭像按鈕
+            const userPhotoButton = document.getElementById('userPhotoButton');
+            userPhotoButton.src = user.photoURL || 'https://via.placeholder.com/100';
+
+            // 填充 Modal 資訊
+            document.getElementById('modalUserPhoto').src = user.photoURL || 'https://via.placeholder.com/100';
+            document.getElementById('modalUserEmail').textContent = user.email;
+            document.getElementById('modalUserName').textContent = user.displayName || '無姓名';
+            document.getElementById('modalLastLogin').textContent = lastLoginDate;
+
+            // 顯示頭像按鈕
+            userPhotoButton.style.display = 'block';
+          }
+
+
+
+          function enableVideo() {
+            const videoContainer = document.getElementById('videoContainer');
+            const videoFrame = document.getElementById('restrictedVideo');
+            videoContainer.style.pointerEvents = 'auto';
+            videoFrame.src = 'https://www.youtube.com/embed/xdfVomq3lAc'; // 恢復影片 src
+          }
+
+
+          function disableVideo() {
+            const videoContainer = document.getElementById('videoContainer');
+            const videoFrame = document.getElementById('restrictedVideo');
+            videoContainer.style.pointerEvents = 'none';
+            videoFrame.src = ''; // 清空 src 停止播放
+          }
+
+          onAuthStateChanged(auth, async (user) => {
+            const userPhotoButton = document.getElementById('userPhotoButton');
+            if (user) {
+              const userRef = ref(database, 'users/' + user.email.replace('.', '_'));
+              const snapshot = await get(userRef);
+
+              if (snapshot.exists()) {
+                const userData = snapshot.val();
+                displayUserInfo(user, userData.lastLogin);
+                enableVideo();
+              }
+            } else {
+              // 未登入時隱藏頭像按鈕
+              userPhotoButton.style.display = 'none';
+              disableVideo();
+            }
+          });
+
+
+
+
+          // 聊天室功能
+          document.getElementById('sendButton').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value;
+
+            if (!user) {
+              Swal.fire('未登入或未註冊', '請先註冊或登入才能發送訊息。', 'error');
+              return;
+            }
+
+            if (messageText.trim() === '') return;
+
+            const newMessageRef = push(messagesRef);
+            await set(newMessageRef, {
+              text: messageText,
+              sender: user.displayName || '無名氏',
+              timestamp: Date.now(),
+              email: user.email // 保存使用者的電子郵件
+            });
+
+            messageInput.value = '';
+          });
+
+          document.getElementById('messageInput').addEventListener('keydown', async (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault(); // 防止按下 Enter 時換行
+              document.getElementById('sendButton').click(); // 模擬點擊發送按鈕
+            }
+          });
+
+
+          // 即時監聽最新的15條訊息，並顯示在聊天室
+          function renderChatMessages() {
+            onValue(query(messagesRef, limitToLast(15)), (snapshot) => {
+              const chatMessagesElement = document.getElementById('chatMessages');
+              chatMessagesElement.innerHTML = ''; // 清空舊訊息
+
+              const currentUser = auth.currentUser;
+
+              snapshot.forEach((messageSnapshot) => {
+                const message = messageSnapshot.val();
+                const messageKey = messageSnapshot.key;
+
+                // 創建訊息的容器
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-2', 'p-2', 'border', 'rounded');
+                messageDiv.style.backgroundColor = '#f8f9fa'; // 淺灰背景
+
+                // 訊息文本
+                const messageText = document.createElement('span');
+                messageText.textContent = `[${moment(message.timestamp).format('HH:mm:ss')}] ${message.sender}: ${message.text}`;
+                messageText.classList.add('flex-grow-1'); // 自適應寬度，讓文字填滿左側
+
+                // 按鈕組容器
+                const buttonGroup = document.createElement('div');
+                buttonGroup.classList.add('ms-auto', 'd-flex', 'gap-2'); // 靠右對齊，按鈕之間有間距
+
+                // 僅在訊息擁有者為當前登入用戶時顯示按鈕
+                if (currentUser && message.email === currentUser.email) {
+                  // 編輯按鈕
+                  const editButton = document.createElement('button');
+                  editButton.textContent = '編輯';
+                  editButton.classList.add('btn', 'btn-warning', 'btn-sm');
+                  editButton.onclick = () => editMessage(messageKey, message.text);
+
+                  // 刪除按鈕
+                  const deleteButton = document.createElement('button');
+                  deleteButton.textContent = '刪除';
+                  deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+                  deleteButton.onclick = () => deleteMessage(messageKey);
+
+                  // 添加按鈕到按鈕組
+                  buttonGroup.appendChild(editButton);
+                  buttonGroup.appendChild(deleteButton);
+                }
+
+                // 添加訊息文本和按鈕組到訊息容器
+                messageDiv.appendChild(messageText);
+                messageDiv.appendChild(buttonGroup);
+
+                // 添加到訊息列表
+                chatMessagesElement.appendChild(messageDiv);
+              });
+
+              // 滾動到底部
+              chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+            });
+          }
+
+
+
+
+
+
+
+
+          // 限制訊息數量並刪除最舊的訊息
+          onValue(messagesRef, async (snapshot) => {
+            if (snapshot.size > 15) {
+              const messages = snapshot.val();
+              const keys = Object.keys(messages);
+              const oldestMessageKey = keys[0];
+              await remove(ref(database, 'chatMessages/' + oldestMessageKey));
+            }
+          });
+
+          function updateDateTime() {
+            document.getElementById('currentDateTime').textContent = moment().format('YYYY-MM-DD HH:mm:ss');
+          }
+
+          setInterval(updateDateTime, 1000);
+
+          // 登出按鈕
+          document.getElementById('logoutButton').addEventListener('click', () => {
+            signOut(auth)
+              .then(() => {
+                Swal.fire('已成功登出', '', 'success');
+                document.getElementById('userInfo').style.display = 'none';
+
+                // 停止影片播放
+                const videoFrame = document.getElementById('restrictedVideo');
+                videoFrame.src = ''; // 清空 src 停止播放
+                disableVideo(); // 禁用影片區域
+              })
+              .catch((error) => {
+                console.error('登出失敗', error);
+                Swal.fire('登出失敗', error.message, 'error');
+              });
+          });
+
+
+
+          // 當使用者關閉頁面時自動登出
+          window.onbeforeunload = () => {
+            const user = auth.currentUser;
+            if (user) {
+              // 同步登出
+              signOut(auth).catch((error) => {
+                console.error('關閉網頁時登出失敗', error);
+              });
+            }
+          };
+
+
+          async function editMessage(messageKey, currentText) {
+            const currentUser = auth.currentUser;
+
+            // 確認訊息的擁有者
+            const messageRef = ref(database, `chatMessages/${messageKey}`);
+            const messageSnapshot = await get(messageRef);
+
+            if (messageSnapshot.exists()) {
+              const message = messageSnapshot.val();
+              if (message.email !== currentUser.email) {
+                Swal.fire('無權限', '您只能編輯自己的訊息。', 'error');
+                return;
+              }
+            }
+
+            // 彈出輸入框讓用戶編輯
+            const { value: newText } = await Swal.fire({
+              title: '編輯訊息',
+              input: 'text',
+              inputValue: currentText,
+              showCancelButton: true,
+              inputValidator: (value) => {
+                if (!value) {
+                  return '訊息內容不能為空！';
+                }
+              },
+            });
+
+            if (newText) {
+              await update(messageRef, { text: newText });
+              Swal.fire('已更新', '訊息已成功更新', 'success');
+            }
+          }
+
+          async function deleteMessage(messageKey) {
+            const currentUser = auth.currentUser;
+
+            // 確認訊息的擁有者
+            const messageRef = ref(database, `chatMessages/${messageKey}`);
+            const messageSnapshot = await get(messageRef);
+
+            if (messageSnapshot.exists()) {
+              const message = messageSnapshot.val();
+              if (message.email !== currentUser.email) {
+                Swal.fire('無權限', '您只能刪除自己的訊息。', 'error');
+                return;
+              }
+            }
+
+            // 彈出確認框
+            const confirm = await Swal.fire({
+              title: '確認刪除？',
+              text: '刪除後將無法恢復該訊息！',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: '刪除',
+              cancelButtonText: '取消',
+            });
+
+            if (confirm.isConfirmed) {
+              await remove(messageRef);
+              Swal.fire('已刪除', '訊息已成功刪除', 'success');
+            }
+          }
+
+
+          document.getElementById('logoutButtonInModal').addEventListener('click', async () => {
+            try {
+              await signOut(auth); // Firebase 登出
+              Swal.fire('已成功登出', '', 'success');
+
+              // 隱藏頭像按鈕
+              document.getElementById('userPhotoButton').style.display = 'none';
+
+              // 清空會員資訊
+              document.getElementById('modalUserPhoto').src = '';
+              document.getElementById('modalUserEmail').textContent = '';
+              document.getElementById('modalUserName').textContent = '';
+              document.getElementById('modalLastLogin').textContent = '';
+
+              // 關閉 Modal
+              const modalElement = document.getElementById('userInfoModal');
+              const userInfoModal = bootstrap.Modal.getInstance(modalElement);
+              if (userInfoModal) {
+                userInfoModal.hide(); // 手動關閉 Modal
+              }
+
+              // 禁用影片區域
+              disableVideo();
+
+              // 重新渲染聊天室，移除按鈕
+              renderChatMessages();
+            } catch (error) {
+              console.error('登出失敗', error);
+              Swal.fire('登出失敗', error.message, 'error');
+            }
+          });
+
+          // 設定關鍵字按鈕
+          document.getElementById('setKeywordButton').addEventListener('click', async () => {
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) {
+              Swal.fire('未登入', '請先登入後再設定關鍵字。', 'error');
+              return;
+            }
+
+            // 彈出輸入框讓使用者輸入關鍵字
+            const { value: keyword } = await Swal.fire({
+              title: '設定關鍵字',
+              input: 'text',
+              inputPlaceholder: '輸入關鍵字...',
+              showCancelButton: true,
+              inputValidator: (value) => {
+                if (!value) {
+                  return '關鍵字不能為空！';
+                }
+              },
+            });
+
+            if (keyword) {
+              const userKeywordRef = ref(database, `keywords/${currentUser.uid}`);
+              push(userKeywordRef, keyword)
+                .then(() => {
+                  Swal.fire('成功', '關鍵字已成功設定！', 'success');
+                })
+                .catch((error) => {
+                  console.error('設定關鍵字失敗', error);
+                  Swal.fire('設定失敗', error.message, 'error');
+                });
+            }
+          });
+
+          // 查看關鍵字按鈕的事件監聽
+          document.getElementById('viewKeywordsButton').addEventListener('click', async () => {
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) {
+              Swal.fire('未登入', '請先登入後再查看關鍵字。', 'error');
+              return;
+            }
+
+            // 用戶已登入，顯示 Modal
+            const keywordsModalElement = document.getElementById('keywordsModal');
+            const keywordsModal = new bootstrap.Modal(keywordsModalElement);
+            keywordsModal.show();
+
+
+            // 加载用户的关键字
+            const userKeywordRef = ref(database, `keywords/${currentUser.uid}`);
+            const snapshot = await get(userKeywordRef);
+
+            const keywordsListElement = document.getElementById('keywordsList');
+            keywordsListElement.innerHTML = ''; // 清空舊關鍵字列表
+
+            if (snapshot.exists()) {
+              snapshot.forEach((childSnapshot) => {
+                const keywordKey = childSnapshot.key;
+                const keyword = childSnapshot.val();
+
+                // 創建列表項
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+
+                // 關鍵字文本
+                const keywordText = document.createElement('span');
+                keywordText.textContent = keyword;
+
+                // 按鈕組容器
+                const buttonGroup = document.createElement('div');
+                buttonGroup.classList.add('d-flex', 'gap-2');
+
+                // 編輯按鈕邏輯
+                const editButton = document.createElement('button');
+                editButton.textContent = '編輯';
+                editButton.classList.add('btn', 'btn-warning', 'btn-sm');
+                editButton.onclick = async () => {
+                  try {
+                    // 首先隱藏模態框，確保完全關閉之後再顯示 SweetAlert
+                    const modalInstance = bootstrap.Modal.getInstance(keywordsModalElement);
+                    if (modalInstance) {
+                      modalInstance.hide();
+                    }
+
+                    // 延遲 300 毫秒以確保模態框完全關閉
+                    setTimeout(async () => {
+                      // 使用 SweetAlert 彈出輸入框讓用戶編輯關鍵字
+                      const { value: newKeyword } = await Swal.fire({
+                        title: '編輯關鍵字',
+                        input: 'text',
+                        inputValue: keyword,
+                        showCancelButton: true,
+                        confirmButtonText: '保存',
+                        cancelButtonText: '取消',
+                        inputValidator: (value) => {
+                          if (!value) {
+                            return '關鍵字不能為空！';
+                          }
+                        },
+                        allowOutsideClick: false,
+                        allowEscapeKey: true,
+                        didOpen: () => {
+                          const input = Swal.getInput();
+                          if (input) {
+                            input.focus(); // 聚焦輸入框
+                          }
+                        }
+                      });
+
+                      // 如果用戶輸入新值並點擊確認，則更新 Firebase 中的關鍵字
+                      if (newKeyword && newKeyword.trim() !== '') {
+                        const keywordRef = ref(database, `keywords/${currentUser.uid}/${keywordKey}`);
+                        await set(keywordRef, newKeyword.trim());
+                        Swal.fire('已更新', '關鍵字已成功更新', 'success');
+                        listItem.querySelector('span').textContent = newKeyword.trim(); // 更新列表中顯示的文本
+                        keywordText.textContent = newKeyword.trim();
+
+                      }
+
+                      // 重新顯示關鍵字模態框
+                      keywordsModal.show();
+                    }, 300);
+                  } catch (error) {
+                    console.error('編輯關鍵字失敗', error);
+                    Swal.fire('錯誤', '更新關鍵字時發生錯誤，請稍後重試。', 'error');
+                  }
+                };
+
+                // 刪除按鈕
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '刪除';
+                deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+                deleteButton.onclick = async () => {
+                  const confirm = await Swal.fire({
+                    title: '確認刪除？',
+                    text: '您確定要刪除這個關鍵字嗎？',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '刪除',
+                    cancelButtonText: '取消',
+                  });
+
+                  if (confirm.isConfirmed) {
+                    const keywordRef = ref(database, `keywords/${currentUser.uid}/${keywordKey}`);
+                    await remove(keywordRef);
+                    Swal.fire('已刪除', '關鍵字已成功刪除', 'success');
+                    listItem.remove(); // 從列表中移除項目
+                  }
+                };
+
+                // 將按鈕添加到按鈕組
+                buttonGroup.appendChild(editButton);
+                buttonGroup.appendChild(deleteButton);
+
+                // 將文本和按鈕組添加到列表項
+                listItem.appendChild(keywordText);
+                listItem.appendChild(buttonGroup);
+
+                // 添加列表項到關鍵字列表
+                keywordsListElement.appendChild(listItem);
+              });
+            } else {
+              const listItem = document.createElement('li');
+              listItem.classList.add('list-group-item');
+              listItem.textContent = '尚未設定任何關鍵字。';
+              keywordsListElement.appendChild(listItem);
+            }
+          });
+
+
+
+
+          onAuthStateChanged(auth, (user) => {
+            const keywordSection = document.getElementById('keywordSection');
+
+            if (user) {
+              // 使用者已登入，顯示關鍵字設定區域
+              keywordSection.style.display = 'block';
+            } else {
+              // 使用者未登入，隱藏關鍵字設定區域
+              keywordSection.style.display = 'none';
+            }
+          });
+
+
+          onChildAdded(messagesRef, async (snapshot) => {
+            const message = snapshot.val();
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) return;
+
+            const userKeywordRef = ref(database, `keywords/${currentUser.uid}`);
+            const keywordSnapshot = await get(userKeywordRef);
+
+            if (keywordSnapshot.exists()) {
+              keywordSnapshot.forEach((childSnapshot) => {
+                const keyword = childSnapshot.val();
+                if (message.text.includes(keyword)) {
+                  Swal.fire('關鍵字通知', `訊息中包含您的關鍵字：「${keyword}」\n訊息：${message.text}`, 'info');
+                }
+              });
+            }
+          });
+
+
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>
