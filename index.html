@@ -162,6 +162,13 @@
           const provider = new GoogleAuthProvider();
           const messagesRef = ref(database, 'chatMessages');
 
+          // 在頁面加載時進行登出操作
+          window.onload = () => {
+            signOut(auth).catch((error) => {
+              console.error('初始化登出失敗', error);
+            });
+          };
+
           // 註冊按鈕
           document.getElementById('registerButton').addEventListener('click', async () => {
             try {
@@ -279,7 +286,16 @@
             }
           });
 
-
+          // 頁面關閉時登出
+          window.onbeforeunload = () => {
+            const user = auth.currentUser;
+            if (user) {
+              // 同步登出
+              signOut(auth).catch((error) => {
+                console.error('關閉網頁時登出失敗', error);
+              });
+            }
+          };
 
 
           // 聊天室功能
