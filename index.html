@@ -162,11 +162,22 @@
           const provider = new GoogleAuthProvider();
           const messagesRef = ref(database, 'chatMessages');
 
-          // 在頁面加載時進行登出操作
+          // 在頁面加載時執行
           window.onload = () => {
+            // 確保初始化登出狀態
             signOut(auth).catch((error) => {
               console.error('初始化登出失敗', error);
             });
+
+            // 手動隱藏會員資訊 Modal
+            const modalElement = document.getElementById('userInfoModal');
+            if (modalElement) {
+              const userInfoModal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+              });
+              userInfoModal.hide();
+            }
           };
 
           // 註冊按鈕
