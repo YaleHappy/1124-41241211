@@ -162,24 +162,24 @@
           const provider = new GoogleAuthProvider();
           const messagesRef = ref(database, 'chatMessages');
 
-          // 在頁面加載時執行
+          // 在頁面加載時進行登出操作
           window.onload = () => {
-            // 確保初始化登出狀態
             signOut(auth).catch((error) => {
               console.error('初始化登出失敗', error);
             });
-
-            // 手動隱藏會員資訊 Modal
-            const modalElement = document.getElementById('userInfoModal');
-            if (modalElement) {
-              const userInfoModal = new bootstrap.Modal(modalElement, {
-                backdrop: 'static',
-                keyboard: false
-              });
-              userInfoModal.hide();
-            }
           };
 
+
+          // 在頁面加載時強制登出用戶
+          window.addEventListener('load', () => {
+            if (auth.currentUser) {
+              signOut(auth).then(() => {
+                console.log('頁面加載後已強制登出');
+              }).catch((error) => {
+                console.error('強制登出失敗', error);
+              });
+            }
+          });
           // 註冊按鈕
           document.getElementById('registerButton').addEventListener('click', async () => {
             try {
@@ -202,6 +202,15 @@
                 Swal.fire('註冊成功', '帳號已成功註冊', 'success');
                 displayUserInfo(user, currentDate);
                 enableVideo();
+
+                // 顯示聊天室
+                document.getElementById('chatMessages').style.visibility = 'visible';
+                const inputGroup = document.querySelector('.input-group.mb-3');
+                inputGroup.style.visibility = 'visible';
+                inputGroup.classList.add('w-100');
+
+                // 渲染聊天室消息
+                renderChatMessages();
               }
             } catch (error) {
               console.error('註冊失敗', error);
@@ -758,6 +767,13 @@
             }
           });
 
+          // 在頁面加載後立即隱藏會員資訊的 Modal
+          document.addEventListener('DOMContentLoaded', () => {
+            const userInfoModal = document.getElementById('userInfoModal');
+            if (userInfoModal && bootstrap.Modal.getInstance(userInfoModal)) {
+              bootstrap.Modal.getInstance(userInfoModal).hide();
+            }
+          });
 
         </script>
 
